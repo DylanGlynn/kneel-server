@@ -4,6 +4,7 @@ from views import get_all_metals, get_single_metal
 from views import get_all_sizes, get_single_size
 from views import get_all_styles, get_single_style
 from views import get_all_orders, get_single_order
+from views import create_order, delete_order, update_order
 
 class HandleRequests(BaseHTTPRequestHandler):
     """Controls the functionality of any GET, PUT, POST, DELETE requests to the server
@@ -34,7 +35,6 @@ class HandleRequests(BaseHTTPRequestHandler):
         self._set_headers(200)
 
         response = {} # Default response
-        
         (resource, id) = self.parse_url(self.path)
 
         if resource == "metals":
@@ -72,12 +72,28 @@ class HandleRequests(BaseHTTPRequestHandler):
 
         content_len = int(self.headers.get('content-length', 0))
         post_body = self.rfile.read(content_len)
-        response = { "payload" : post_body }
-        self.wfile.write(json.dumps(response).encode())
+        post_body = json.loads(post_body)
+
+        (resource, id) = self.parse_url(self.path)
+
+        new_order = None
+
+        if resource == "orders":
+            new_order = create_order(post_body)
+        self.wfile.write(json.dumps(new_order).encode())
 
     def do_PUT(self):
         """Handles PUT requests to the server """
-        self.do_POST()
+        self._set_headers(204)
+        content_len = int(self.headers.get('content-length', 0))
+        post_body = self.rfile.read(content_len)
+        post_body = json.loads(post_body)
+
+        (resource, id) = self.parse_url(self.path)
+
+        if resource == "orders":
+            update_order(id, post_body)
+        self.wfile.write("".encode())
 
     def _set_headers(self, status):
         """Sets the status code, Content-Type and Access-Control-Allow-Origin
@@ -99,6 +115,15 @@ class HandleRequests(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
         self.send_header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept')
         self.end_headers()
+
+    def do_DELETE(self):
+        '''Delete method.'''
+        self._set_headers(204)
+        (resource, id) = self.parse_url(self.path)
+        if resource == "orders":
+            delete_order(id)
+
+        self.wfile.write("".encode())
 
 
 # point of this application.
