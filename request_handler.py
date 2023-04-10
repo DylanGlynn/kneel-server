@@ -40,18 +40,26 @@ class HandleRequests(BaseHTTPRequestHandler):
         if resource == "metals":
             if id is not None:
                 response = get_single_metal(id)
+                if response is None:
+                    self._set_headers(404)
             else:
                 response = get_all_metals()
 
         elif resource == "sizes":
             if id is not None:
                 response = get_single_size(id)
+                if response is None:
+                    self._set_headers(404)
             else:
                 response = get_all_sizes()
+                if response is None:
+                    self._set_headers(404)
 
         elif resource == "styles":
             if id is not None:
                 response = get_single_style(id)
+                if response is None:
+                    self._set_headers(404)
             else:
                 response = get_all_styles()
 
@@ -79,21 +87,30 @@ class HandleRequests(BaseHTTPRequestHandler):
         new_order = None
 
         if resource == "orders":
-            new_order = create_order(post_body)
+            if "metalId" in post_body and "sizeId" in post_body and "styleId" in post_body:
+                self._set_headers(201)
+                new_order = create_order(post_body)
+            else:
+                self._set_headers(400)
+                new_order = {"message": f'{"Metal selection is required." if "metalId" is not post_body else ""} {"Size selection is required." if "sizeId" is not post_body else ""} {"Style selection is required." if "styleId" is not post_body else ""}'}
+
         self.wfile.write(json.dumps(new_order).encode())
 
     def do_PUT(self):
         """Handles PUT requests to the server """
-        self._set_headers(204)
+        # self._set_headers(204)
         content_len = int(self.headers.get('content-length', 0))
         post_body = self.rfile.read(content_len)
         post_body = json.loads(post_body)
 
+
         (resource, id) = self.parse_url(self.path)
 
         if resource == "orders":
-            update_order(id, post_body)
-        self.wfile.write("".encode())
+            # update_order(id, post_body)
+            self._set_headers(400)
+            
+        self.wfile.write("Order has been paid for and is being processed. Cannot update.".encode())
 
     def _set_headers(self, status):
         """Sets the status code, Content-Type and Access-Control-Allow-Origin

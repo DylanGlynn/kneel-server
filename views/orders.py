@@ -13,7 +13,7 @@ ORDERS = [
     {
     "metalId": 2,
     "sizeId": 2,
-    "styleId": 4,
+    "styleId": 2,
     "timestamp": 161459931693,
     "id": 2}
 ]
