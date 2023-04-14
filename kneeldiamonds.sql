@@ -56,4 +56,5 @@ INSERT INTO `Orders` VALUES (null, 5, 5, 2, CURRENT_TIMESTAMP);
 ALTER TABLE `Orders` DROP `timestamp`;
 ALTER TABLE `Orders` ADD `timestamp` CURRENT_TIMESTAMP;
 
-
+UPDATE `Orders` SET `timestamp` = "2023-04-14 19:34:52"
+WHERE `id` = 7;

@@ -87,7 +87,7 @@ class HandleRequests(BaseHTTPRequestHandler):
         new_order = None
 
         if resource == "orders":
-            if "metalId" in post_body and "sizeId" in post_body and "styleId" in post_body:
+            if "metal_id" in post_body and "size_id" in post_body and "style_id" in post_body:
                 self._set_headers(201)
                 new_order = create_order(post_body)
             else:
