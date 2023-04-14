@@ -136,13 +136,13 @@ def create_order(new_order):
 
 def delete_order(id):
     '''The delete an order'''
-    order_index = -1
-    for index, order in enumerate(ORDERS):
-        if order["id"] == id:
-            order_index = index
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        db_cursor = conn.cursor()
 
-    if order_index >= 0:
-        ORDERS.pop(order_index)
+        db_cursor.execute("""
+        DELETE FROM Orders
+        WHERE id = ?
+        """, (id, ))
 
 
 def update_order(id, new_order):
