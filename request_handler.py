@@ -1,6 +1,6 @@
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from views import get_all_metals, get_single_metal
+from views import get_all_metals, get_single_metal, update_metal
 from views import get_all_sizes, get_single_size
 from views import get_all_styles, get_single_style
 from views import get_all_orders, get_single_order
@@ -92,7 +92,8 @@ class HandleRequests(BaseHTTPRequestHandler):
                 new_order = create_order(post_body)
             else:
                 self._set_headers(400)
-                new_order = {"message": f'{"Metal selection is required." if "metalId" is not post_body else ""} {"Size selection is required." if "sizeId" is not post_body else ""} {"Style selection is required." if "styleId" is not post_body else ""}'}
+                new_order = {"message":
+                             f'{"Metal selection is required." if "metalId" is not post_body else ""} {"Size selection is required." if "sizeId" is not post_body else ""} {"Style selection is required." if "styleId" is not post_body else ""}'}
 
         self.wfile.write(json.dumps(new_order).encode())
 
@@ -103,14 +104,24 @@ class HandleRequests(BaseHTTPRequestHandler):
         post_body = self.rfile.read(content_len)
         post_body = json.loads(post_body)
 
-
         (resource, id) = self.parse_url(self.path)
+
+        success = False
 
         if resource == "orders":
             # update_order(id, post_body)
             self._set_headers(400)
 
-        self.wfile.write("Order has been paid for and is being processed. Cannot update.".encode())
+        elif resource == 'metals':
+            success = update_metal(id, post_body)
+
+        if success:
+            self._set_headers(204)
+        else:
+            self._set_headers(400)
+
+        self.wfile.write("".encode())
+
 
     def _set_headers(self, status):
         """Sets the status code, Content-Type and Access-Control-Allow-Origin

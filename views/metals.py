@@ -1,3 +1,6 @@
+import sqlite3
+from models import Metal
+
 METALS = [
     {
         "id": 1,
@@ -27,13 +30,58 @@ METALS = [
 
 def get_all_metals():
     '''Shows all METALS.'''
-    return METALS
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+        db_cursor.execute("""
+        SELECT
+            m.id,
+            m.metal,
+            m.price
+        FROM Metals m
+        """)
+        metals = []
+        dataset = db_cursor.fetchall()
+
+        for row in dataset:
+            metal = Metal(row['id'], row['metal'], row['price'])
+            metals.append(metal.__dict__)
+
+    return metals
+
 
 def get_single_metal(id):
     '''Shows a single metal from METALS.'''
-    requested_metal = None
-    for metal in METALS:
-        if metal["id"] == id:
-            requested_metal = metal
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+        db_cursor.execute("""
+        SELECT
+            m.id,
+            m.metal,
+            m.price
+        FROM Metals m
+        WHERE m.id = ?    
+        """, (id, ))
+        data = db_cursor.fetchone()
+        metal = Metal(data['id'], data['metal'], data['price'])
+        return metal.__dict__
 
-    return requested_metal
+
+def update_metal(id, new_metal):
+    ''' Handles updating information of existing animals. '''
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        db_cursor = conn.cursor()
+        db_cursor.execute("""
+        UPDATE Metals
+            SET
+                metal = ?,
+                price = ?
+        WHERE id = ?
+        """ , (new_metal['metal'], new_metal['price'], id, ))
+
+        rows_affected = db_cursor.rowcount
+
+        if rows_affected == 0:
+            return False
+        return True
