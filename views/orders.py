@@ -1,3 +1,5 @@
+import sqlite3
+from models import Metal, Size, Style, Order
 from .metals import get_single_metal
 from .sizes import get_single_size
 from .styles import get_single_style
@@ -20,7 +22,53 @@ ORDERS = [
 
 def get_all_orders():
     ''' Shows all ORDERS. '''
-    return ORDERS
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        SELECT
+            o.id,
+            o.metal_id,
+            o.size_id,
+            o.style_id,
+            o.timestamp,
+            m.metal,
+            m.price metal_price,
+            s.size,
+            s.price size_price,
+            t.style,
+            t.price style_price
+        FROM Orders o
+        JOIN Metals m
+            ON m.id = o.metal_id
+        JOIN Sizes s
+            ON s.id = o.size_id
+        JOIN Styles t
+            On t.id = o.style_id
+        """)
+
+        orders = []
+
+        dataset = db_cursor.fetchall()
+
+        for row in dataset:
+            order = Order(row['id'], row['metal_id'],
+                          row['size_id'], row['style_id'],
+                          row['timestamp'])
+            metal = Metal(row['metal_id'], row['metal'],
+                          row['metal_price'])
+            size = Size(row['size_id'],row['size'],row['size_price'])
+            style = Style(row['style_id'],row['style'],row['style_price'])
+
+            order.metal = metal.__dict__
+            order.size = size.__dict__
+            order.style = style.__dict__
+
+            orders.append(order.__dict__)
+
+    return orders
+
 
 def get_single_order(id):
     '''Shows a single order from ORDERS.'''

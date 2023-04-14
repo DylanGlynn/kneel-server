@@ -109,7 +109,7 @@ class HandleRequests(BaseHTTPRequestHandler):
         if resource == "orders":
             # update_order(id, post_body)
             self._set_headers(400)
-            
+
         self.wfile.write("Order has been paid for and is being processed. Cannot update.".encode())
 
     def _set_headers(self, status):

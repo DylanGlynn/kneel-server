@@ -1,7 +1,6 @@
 class Metal():
     '''Class for defining Metals.'''
-    def __init__(self, id, size, type, price):
+    def __init__(self, id, metal, price):
         self.id = id
-        self.size = size
-        self.type = type
+        self.metal = metal
         self.price = price
