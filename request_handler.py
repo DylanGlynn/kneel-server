@@ -1,10 +1,11 @@
+from urllib.parse import urlparse#, parse_qs
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from views import get_all_metals, get_single_metal, update_metal
 from views import get_all_sizes, get_single_size
 from views import get_all_styles, get_single_style
 from views import get_all_orders, get_single_order
-from views import create_order, delete_order, update_order
+from views import create_order, delete_order#, update_order
 
 class HandleRequests(BaseHTTPRequestHandler):
     """Controls the functionality of any GET, PUT, POST, DELETE requests to the server
@@ -14,63 +15,78 @@ class HandleRequests(BaseHTTPRequestHandler):
         # path is "/animals/1", the resulting list will
         # have "" at index 0, "animals" at index 1, and "1"
         # at index 2.
-        path_params = path.split("/")
-        resource = path_params[1]
+        url_components = urlparse(path)
+        path_params = url_components.path.strip("/").split("/")
+        query_params = []
+
+        if url_components.query != "":
+            query_params = url_components.query.split("&")
+
+        resource = path_params[0]
         id = None
 
         # Try to get the item at index 2
         try:
             # Convert the string "1" to the integer 1
             # This is the new parseInt()
-            id = int(path_params[2])
+            id = int(path_params[1])
         except IndexError:
             pass  # No route parameter exists: /animals
         except ValueError:
             pass  # Request had trailing slash: /animals/
 
-        return (resource, id)
+        return (resource, id, query_params)
 
     def do_GET(self):
         """Handles GET requests to the server """
-        self._set_headers(200)
+        # self._set_headers(200)
 
         response = {} # Default response
-        (resource, id) = self.parse_url(self.path)
+        parsed = self.parse_url(self.path)
 
-        if resource == "metals":
-            if id is not None:
-                response = get_single_metal(id)
-                if response is None:
-                    self._set_headers(404)
-            else:
-                response = get_all_metals()
+        if '?' not in self.path:
+            (resource, id, query_params) = parsed
 
-        elif resource == "sizes":
-            if id is not None:
-                response = get_single_size(id)
-                if response is None:
-                    self._set_headers(404)
-            else:
-                response = get_all_sizes()
-                if response is None:
-                    self._set_headers(404)
+            if resource == "metals":
+                if id is not None:
+                    response = get_single_metal(id)
+                else:
+                    print('If resource = metals and no Id.')
+                    response = get_all_metals(query_params)
 
-        elif resource == "styles":
-            if id is not None:
-                response = get_single_style(id)
-                if response is None:
-                    self._set_headers(404)
-            else:
-                response = get_all_styles()
+            elif resource == "sizes":
+                if id is not None:
+                    response = get_single_size(id)
+                else:
+                    response = get_all_sizes(query_params)
 
-        elif resource == "orders":
-            if id is not None:
-                response = get_single_order(id)
-            else:
-                response = get_all_orders()
+            elif resource == "styles":
+                if id is not None:
+                    response = get_single_style(id)
+                else:
+                    response = get_all_styles(query_params)
+
+            elif resource == "orders":
+                if id is not None:
+                    response = get_single_order(id)
+                else:
+                    response = get_all_orders()
 
         else:
-            response = []
+            (resource, id, query_params) = parsed
+
+            if resource == "metals":
+                #if query_params.get("price"):
+                response = get_all_metals(query_params)
+            elif resource == "sizes":
+                response = get_all_sizes(query_params)
+            elif resource == "styles":
+                response = get_all_styles(query_params)
+
+        if response is None:
+            self._set_headers(404)
+        else:
+            self._set_headers(200)
 
         self.wfile.write(json.dumps(response).encode())
 
@@ -82,7 +98,7 @@ class HandleRequests(BaseHTTPRequestHandler):
         post_body = self.rfile.read(content_len)
         post_body = json.loads(post_body)
 
-        (resource, id) = self.parse_url(self.path)
+        (resource, id, query_params) = self.parse_url(self.path)
 
         new_order = None
 
@@ -104,7 +120,7 @@ class HandleRequests(BaseHTTPRequestHandler):
         post_body = self.rfile.read(content_len)
         post_body = json.loads(post_body)
 
-        (resource, id) = self.parse_url(self.path)
+        (resource, id, query_params) = self.parse_url(self.path)
 
         success = False
 
@@ -147,7 +163,7 @@ class HandleRequests(BaseHTTPRequestHandler):
     def do_DELETE(self):
         '''Delete method.'''
         self._set_headers(204)
-        (resource, id) = self.parse_url(self.path)
+        (resource, id, query_params) = self.parse_url(self.path)
         if resource == "orders":
             delete_order(id)
 

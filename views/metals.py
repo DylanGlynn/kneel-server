@@ -28,18 +28,32 @@ METALS = [
         "price": 1241.0
     }]
 
-def get_all_metals():
+def get_all_metals(query_params):
     '''Shows all METALS.'''
     with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
         conn.row_factory = sqlite3.Row
         db_cursor = conn.cursor()
-        db_cursor.execute("""
+
+        sort_by = ""
+
+        if len(query_params) != 0:
+            param = query_params[0]
+            [qs_key, qs_value] = param.split("=")
+
+            if qs_key == "_sortBy":
+                sort_by = f"ORDER BY m.{qs_value} ASC"
+
+        sql_to_execute = f"""
         SELECT
             m.id,
             m.metal,
             m.price
         FROM Metals m
-        """)
+        {sort_by}
+        """
+
+        db_cursor.execute(sql_to_execute)
+
         metals = []
         dataset = db_cursor.fetchall()
 

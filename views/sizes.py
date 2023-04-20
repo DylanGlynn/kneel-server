@@ -1,3 +1,7 @@
+import sqlite3
+import json
+from models import Size
+
 SIZES = [
     {
         "id": 1,
@@ -26,9 +30,42 @@ SIZES = [
     }
 ]
 
-def get_all_sizes():
+def get_all_sizes(query_params):
     '''Shows all SIZES.'''
-    return SIZES
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+
+        sort_by = ""
+
+        if len(query_params) != 0:
+            param = query_params[0]
+            [qs_key, qs_value] = param.split("=")
+
+            if qs_key == "_sortBy":
+                sort_by = f"ORDER BY s.{qs_value} ASC"
+
+        sql_to_execute = f"""
+        SELECT
+            s.id,
+            s.size,
+            s.price
+        FROM Sizes s
+        {sort_by}
+        """
+        db_cursor.execute(sql_to_execute)
+
+        sizes = []
+        dataset = db_cursor.fetchall()
+
+        for row in dataset:
+            size = Size(row['id'],
+                        row['size'],
+                        row['price'])
+
+            sizes.append(size.__dict__)
+
+    return sizes
 
 def get_single_size(id):
     '''Shows a single size of SIZES.'''
